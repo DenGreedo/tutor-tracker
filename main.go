@@ -1,15 +1,17 @@
 package main
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
+	"os"
 )
 
 type Student struct {
-	ID    int
-	Name  string
-	Exam  string
-	Price int
+	ID    int    `json:"id"`
+	Name  string `json:"name"`
+	Exam  string `json:"exam"`
+	Price int    `json:"price"`
 }
 
 type Store struct {
@@ -19,11 +21,21 @@ type Store struct {
 
 func main() {
 
+	const dataFile = "students.json"
+
 	store := NewStore()
+	if err := store.Load(dataFile); err != nil {
+		fmt.Println("Не удалось загрузить данные", err)
+		return
+	}
 	store.Add("Карина", "ОГЭ", 1300)
 	store.Add("Андрей", "ЕГЭ", 1500)
 	store.Add("Настя", "ЕГЭ", 1500)
 	store.Print()
+
+	if err := store.Save(dataFile); err != nil {
+		fmt.Println("Не удалось загрузить данные", err)
+	}
 
 	s, err := store.FindByID(3)
 	if err != nil {
@@ -64,4 +76,37 @@ func (st *Store) Add(name, exam string, price int) Student {
 	st.students = append(st.students, s)
 	st.nextID++
 	return s
+}
+
+func (st *Store) Save(filename string) error {
+	data, err := json.MarshalIndent(st.students, "", "  ")
+	if err != nil {
+		return err
+	}
+	return os.WriteFile(filename, data, 0644)
+}
+
+func (st *Store) Load(filename string) error {
+	data, err := os.ReadFile(filename)
+	if errors.Is(err, os.ErrNotExist) {
+		return nil
+	}
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal(data, &st.students)
+	if err != nil {
+		return err
+	}
+
+	maxID := 0
+	for _, s := range st.students {
+		if s.ID > maxID {
+			maxID = s.ID
+		}
+	}
+	st.nextID = maxID + 1
+
+	return nil
 }
