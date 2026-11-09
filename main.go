@@ -25,7 +25,7 @@ func main() {
 
 	store := NewStore()
 	if err := store.Load(dataFile); err != nil {
-		fmt.Println("Не удалось загрузить данные", err)
+		fmt.Println("Не удалось загрузить данные:", err)
 		return
 	}
 	store.Add("Карина", "ОГЭ", 1300)
@@ -34,7 +34,7 @@ func main() {
 	store.Print()
 
 	if err := store.Save(dataFile); err != nil {
-		fmt.Println("Не удалось загрузить данные", err)
+		fmt.Println("Не удалось сохранить данные:", err)
 	}
 
 	s, err := store.FindByID(3)
