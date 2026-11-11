@@ -1,4 +1,4 @@
-package main
+package store
 
 import (
 	"path/filepath"
@@ -75,7 +75,7 @@ func TestSaveLoad(t *testing.T) {
 	}
 
 	if len(loaded.students) != 2 {
-		t.Errorf("Загружено учеников: %d, ожидали 2", len(loaded.students))
+		t.Errorf("загружено учеников: %d, ожидали 2", len(loaded.students))
 	}
 
 	if loaded.nextID != 3 {
