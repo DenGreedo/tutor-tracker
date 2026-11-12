@@ -2,39 +2,25 @@ package main
 
 import (
 	"fmt"
-
-	"github.com/DenGreedo/tutor-tracker/internal/store"
+	"log"
+	"net/http"
 )
 
 func main() {
+	mux := http.NewServeMux()
 
-	const dataFile = "students.json"
+	mux.HandleFunc("GET /health", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintln(w, "ok")
+	})
 
-	st := store.NewStore()
-	if err := st.Load(dataFile); err != nil {
-		fmt.Println("Не удалось загрузить данные:", err)
-		return
-	}
-	st.Add("Карина", "ОГЭ", 1300)
-	st.Add("Андрей", "ЕГЭ", 1500)
-	st.Add("Настя", "ЕГЭ", 1500)
-	st.Print()
+	mux.HandleFunc("GET /hello", func(w http.ResponseWriter, r *http.Request) {
+		name := r.URL.Query().Get("name")
+		if name == "" {
+			name = "друг"
+		}
+		fmt.Fprintf(w, "Привет, %s!\n", name)
+	})
 
-	s, err := st.FindByID(3)
-	if err != nil {
-		fmt.Println("Ошибка:", err)
-	} else {
-		fmt.Printf("Найден: %+v\n", s)
-	}
-
-	s, err = st.FindByID(92)
-	if err != nil {
-		fmt.Println("Ошибка:", err)
-	} else {
-		fmt.Printf("Найден: %+v\n", s)
-	}
-
-	if err := st.Save(dataFile); err != nil {
-		fmt.Println("Не удалось сохранить данные:", err)
-	}
+	log.Println("сервер запущен на http://localhost:8080")
+	log.Fatal(http.ListenAndServe(":8080", mux))
 }
