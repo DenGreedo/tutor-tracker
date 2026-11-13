@@ -1,6 +1,7 @@
 package store
 
 import (
+	"errors"
 	"path/filepath"
 	"testing"
 )
@@ -47,8 +48,8 @@ func TestFindByID_NotFound(t *testing.T) {
 
 	s, err := store.FindByID(99)
 
-	if err == nil {
-		t.Fatal("FindByID(99) не вернул ошибку, ученика с ID 99 нет")
+	if !errors.Is(err, ErrNotFound) {
+		t.Fatalf("FindByID(99): ошибка = %v, ожидали ErrNotFound", err)
 	}
 
 	if s != (Student{}) {

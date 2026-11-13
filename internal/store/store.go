@@ -7,6 +7,8 @@ import (
 	"os"
 )
 
+var ErrNotFound = errors.New("ученик не найден")
+
 type Student struct {
 	ID    int    `json:"id"`
 	Name  string `json:"name"`
@@ -31,7 +33,7 @@ func (st *Store) FindByID(id int) (Student, error) {
 			return s, nil
 		}
 	}
-	return Student{}, errors.New("ученик не найден")
+	return Student{}, ErrNotFound
 }
 
 func NewStore() *Store {

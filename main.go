@@ -2,9 +2,11 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
+	"strconv"
 
 	"github.com/DenGreedo/tutor-tracker/internal/store"
 )
@@ -24,12 +26,41 @@ func main() {
 	})
 
 	mux.HandleFunc("GET /students", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
-		if err := json.NewEncoder(w).Encode(st.All()); err != nil {
-			log.Println("не удалось отправить список учеников:", err)
+		writeJSON(w, http.StatusOK, st.All())
+	})
+
+	mux.HandleFunc("GET /students/{id}", func(w http.ResponseWriter, r *http.Request) {
+		id, err := strconv.Atoi(r.PathValue("id"))
+		if err != nil {
+			writeError(w, http.StatusBadRequest, "id должен быть числом")
+			return
 		}
+
+		s, err := st.FindByID(id)
+		if errors.Is(err, store.ErrNotFound) {
+			writeError(w, http.StatusNotFound, "ученик не найден")
+			return
+		}
+		if err != nil {
+			writeError(w, http.StatusInternalServerError, "внутренняя ошибка сервера")
+			return
+		}
+
+		writeJSON(w, http.StatusOK, s)
 	})
 
 	log.Println("сервер запущен на http://localhost:8080")
 	log.Fatal(http.ListenAndServe(":8080", mux))
+}
+
+func writeJSON(w http.ResponseWriter, status int, v any) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(status)
+	if err := json.NewEncoder(w).Encode(v); err != nil {
+		log.Println("не удалось записать JSON:", err)
+	}
+}
+
+func writeError(w http.ResponseWriter, status int, message string) {
+	writeJSON(w, status, map[string]string{"error": message})
 }
