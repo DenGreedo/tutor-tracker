@@ -77,3 +77,9 @@ func (st *Store) Load(filename string) error {
 
 	return nil
 }
+
+func (st *Store) All() []Student {
+	result := make([]Student, len(st.students))
+	copy(result, st.students)
+	return result
+}

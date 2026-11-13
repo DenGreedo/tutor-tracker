@@ -82,3 +82,25 @@ func TestSaveLoad(t *testing.T) {
 		t.Errorf("nextID после загрузки = %d, ожидали 3", loaded.nextID)
 	}
 }
+
+func TestAll_ReturnsCopy(t *testing.T) {
+	store := NewStore()
+	store.Add("Карина", "ОГЭ", 1300)
+	store.Add("Андрей", "ЕГЭ", 1500)
+
+	result := store.All()
+
+	if len(result) != 2 {
+		t.Fatalf("All вернул %d учеников, ожидали 2", len(result))
+	}
+
+	result[0].Name = "Изменено"
+
+	s, err := store.FindByID(1)
+	if err != nil {
+		t.Fatalf("FindByID(1) вернул ошибку: %v", err)
+	}
+	if s.Name != "Карина" {
+		t.Errorf("имя в журнале = %s, ожидали Карина: All отдал не копию", s.Name)
+	}
+}
