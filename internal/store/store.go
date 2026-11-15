@@ -34,6 +34,19 @@ func (st *Store) FindByID(id int) (Student, error) {
 	return Student{}, ErrNotFound
 }
 
+func (st *Store) Delete(id int) error {
+	st.mu.Lock()
+	defer st.mu.Unlock()
+
+	for i, s := range st.students {
+		if s.ID == id {
+			st.students = append(st.students[:i], st.students[i+1:]...)
+			return nil
+		}
+	}
+	return ErrNotFound
+}
+
 func NewStore() *Store {
 	return &Store{nextID: 1}
 }

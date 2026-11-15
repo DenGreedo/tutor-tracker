@@ -133,3 +133,54 @@ func TestAdd_Concurrent(t *testing.T) {
 		seen[s.ID] = true
 	}
 }
+
+func TestDelete_RemovesStudent(t *testing.T) {
+	store := NewStore()
+	store.Add("Карина", "ОГЭ", 1300)
+	store.Add("Андрей", "ЕГЭ", 1500)
+	store.Add("Настя", "ЕГЭ", 1500)
+
+	if err := store.Delete(2); err != nil {
+		t.Fatalf("Delete(2) вернул ошибку: %v", err)
+	}
+
+	if _, err := store.FindByID(2); !errors.Is(err, ErrNotFound) {
+		t.Errorf("после удаления FindByID(2): ошибка = %v, ожидали ErrNotFound", err)
+	}
+
+	if n := len(store.All()); n != 2 {
+		t.Errorf("учеников после удаления = %d, ожидали 2", n)
+	}
+
+	if s, err := store.FindByID(3); err != nil || s.Name != "Настя" {
+		t.Errorf("FindByID(3) после удаления = %+v, %v; ожидали Настю", s, err)
+	}
+}
+
+func TestDelete_NotFound(t *testing.T) {
+	store := NewStore()
+	store.Add("Карина", "ОГЭ", 1300)
+
+	err := store.Delete(99)
+
+	if !errors.Is(err, ErrNotFound) {
+		t.Errorf("Delete(99): ошибка = %v, ожидали ErrNotFound", err)
+	}
+}
+
+func TestDelete_DoesNotReuseID(t *testing.T) {
+	store := NewStore()
+	store.Add("Карина", "ОГЭ", 1300)
+	store.Add("Андрей", "ЕГЭ", 1500)
+	store.Add("Настя", "ЕГЭ", 1500)
+
+	if err := store.Delete(3); err != nil {
+		t.Fatalf("Delete(3) вернул ошибку: %v", err)
+	}
+
+	petya := store.Add("Петя", "ЕГЭ", 1600)
+
+	if petya.ID != 4 {
+		t.Errorf("ID нового ученика = %d, ожидали 4", petya.ID)
+	}
+}

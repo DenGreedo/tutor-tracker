@@ -81,6 +81,32 @@ func main() {
 		writeJSON(w, http.StatusCreated, s)
 	})
 
+	mux.HandleFunc("DELETE /students/{id}", func(w http.ResponseWriter, r *http.Request) {
+		id, err := strconv.Atoi(r.PathValue("id"))
+		if err != nil {
+			writeError(w, http.StatusBadRequest, "id должен быть числом")
+			return
+		}
+
+		err = st.Delete(id)
+		if errors.Is(err, store.ErrNotFound) {
+			writeError(w, http.StatusNotFound, "ученик не найден")
+			return
+		}
+		if err != nil {
+			writeError(w, http.StatusInternalServerError, "внутренняя ошибка сервера")
+			return
+		}
+
+		if err := st.Save(dataFile); err != nil {
+			log.Println("не удалось сохранить данные:", err)
+			writeError(w, http.StatusInternalServerError, "не удалось сохранить изменения")
+			return
+		}
+
+		w.WriteHeader(http.StatusNoContent)
+	})
+
 	log.Println("сервер запущен на http://localhost:8080")
 	log.Fatal(http.ListenAndServe(":8080", mux))
 }
