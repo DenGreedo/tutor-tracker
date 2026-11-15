@@ -1,4 +1,4 @@
-package main
+package httpapi
 
 import (
 	"encoding/json"
@@ -19,10 +19,10 @@ func newTestMux(t *testing.T) *http.ServeMux {
 	st.Add("Андрей", "ЕГЭ", 1500)
 
 	path := filepath.Join(t.TempDir(), "students.json")
-	return newMux(st, path)
+	return New(st, path)
 }
 
-func doRequest(mux *http.ServeMux, method, target, body string) *httptest.ResponseRecorder {
+func doRequest(mux http.Handler, method, target, body string) *httptest.ResponseRecorder {
 	req := httptest.NewRequest(method, target, strings.NewReader(body))
 	rec := httptest.NewRecorder()
 	mux.ServeHTTP(rec, req)
