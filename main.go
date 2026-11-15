@@ -26,6 +26,13 @@ func main() {
 		log.Fatal("не удалось загрузить данные: ", err)
 	}
 
+	mux := newMux(st, dataFile)
+
+	log.Println("сервер запущен на http://localhost:8080")
+	log.Fatal(http.ListenAndServe(":8080", mux))
+}
+
+func newMux(st *store.Store, dataFile string) *http.ServeMux {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("GET /health", func(w http.ResponseWriter, r *http.Request) {
@@ -107,8 +114,7 @@ func main() {
 		w.WriteHeader(http.StatusNoContent)
 	})
 
-	log.Println("сервер запущен на http://localhost:8080")
-	log.Fatal(http.ListenAndServe(":8080", mux))
+	return mux
 }
 
 func writeJSON(w http.ResponseWriter, status int, v any) {
