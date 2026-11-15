@@ -3,8 +3,8 @@ package store
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"os"
+	"sync"
 )
 
 var ErrNotFound = errors.New("ученик не найден")
@@ -17,17 +17,15 @@ type Student struct {
 }
 
 type Store struct {
+	mu       sync.Mutex
 	students []Student
 	nextID   int
 }
 
-func (st *Store) Print() {
-	for _, s := range st.students {
-		fmt.Printf("%d. %s - %s - %d ₽\n", s.ID, s.Name, s.Exam, s.Price)
-	}
-}
-
 func (st *Store) FindByID(id int) (Student, error) {
+	st.mu.Lock()
+	defer st.mu.Unlock()
+
 	for _, s := range st.students {
 		if s.ID == id {
 			return s, nil
@@ -41,6 +39,9 @@ func NewStore() *Store {
 }
 
 func (st *Store) Add(name, exam string, price int) Student {
+	st.mu.Lock()
+	defer st.mu.Unlock()
+
 	s := Student{ID: st.nextID, Name: name, Exam: exam, Price: price}
 	st.students = append(st.students, s)
 	st.nextID++
@@ -48,6 +49,9 @@ func (st *Store) Add(name, exam string, price int) Student {
 }
 
 func (st *Store) Save(filename string) error {
+	st.mu.Lock()
+	defer st.mu.Unlock()
+
 	data, err := json.MarshalIndent(st.students, "", "  ")
 	if err != nil {
 		return err
@@ -56,6 +60,9 @@ func (st *Store) Save(filename string) error {
 }
 
 func (st *Store) Load(filename string) error {
+	st.mu.Lock()
+	defer st.mu.Unlock()
+
 	data, err := os.ReadFile(filename)
 	if errors.Is(err, os.ErrNotExist) {
 		return nil
@@ -81,6 +88,9 @@ func (st *Store) Load(filename string) error {
 }
 
 func (st *Store) All() []Student {
+	st.mu.Lock()
+	defer st.mu.Unlock()
+
 	result := make([]Student, len(st.students))
 	copy(result, st.students)
 	return result

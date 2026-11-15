@@ -3,6 +3,7 @@ package store
 import (
 	"errors"
 	"path/filepath"
+	"sync"
 	"testing"
 )
 
@@ -103,5 +104,32 @@ func TestAll_ReturnsCopy(t *testing.T) {
 	}
 	if s.Name != "Карина" {
 		t.Errorf("имя в журнале = %s, ожидали Карина: All отдал не копию", s.Name)
+	}
+}
+
+func TestAdd_Concurrent(t *testing.T) {
+	store := NewStore()
+
+	var wg sync.WaitGroup
+	for i := 0; i < 100; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			store.Add("Ученик", "ЕГЭ", 1500)
+		}()
+	}
+	wg.Wait()
+
+	all := store.All()
+	if len(all) != 100 {
+		t.Fatalf("учеников = %d, ожидали 100", len(all))
+	}
+
+	seen := make(map[int]bool)
+	for _, s := range all {
+		if seen[s.ID] {
+			t.Fatalf("ID %d выдан дважды", s.ID)
+		}
+		seen[s.ID] = true
 	}
 }
